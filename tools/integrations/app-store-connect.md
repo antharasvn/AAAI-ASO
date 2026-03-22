@@ -88,14 +88,18 @@ curl -H "Authorization: Bearer $JWT_TOKEN" \
 
 ## When to Use App Store Connect vs Appeeky
 
-| Need | App Store Connect | Appeeky |
-|------|------------------|---------|
-| Your app's exact download numbers | ✓ (official) | Estimates |
-| Your app's exact revenue | ✓ (official) | Estimates |
-| Competitor data | ✗ | ✓ |
-| Keyword rankings | ✗ | ✓ |
-| Keyword volume/difficulty | ✗ | ✓ |
-| A/B test setup | ✓ (native) | ✗ |
-| Review management | ✓ (respond) | ✓ (analyze) |
-| ASO audit | ✗ | ✓ |
-| Market intelligence | Limited | ✓ |
+| Need | App Store Connect | Appeeky Connect | Appeeky |
+|------|------------------|----------------|---------|
+| Your app's exact download numbers | ✓ (official) | ✓ (synced daily) | Estimates |
+| Your app's exact revenue | ✓ (official) | ✓ (synced daily) | Estimates |
+| IAP counts, trials, subscriptions | ✓ (official) | ✓ (synced daily) | ✗ |
+| Country breakdown (exact) | ✓ | ✓ (synced daily) | ✗ |
+| Competitor data | ✗ | ✗ | ✓ |
+| Keyword rankings | ✗ | ✗ | ✓ |
+| Keyword volume/difficulty | ✗ | ✗ | ✓ |
+| A/B test setup | ✓ (native) | ✗ | ✗ |
+| Review management | ✓ (respond) | ✗ | ✓ (analyze) |
+| ASO audit | ✗ | ✗ | ✓ |
+| Market intelligence | Limited | ✗ | ✓ |
+
+**Appeeky Connect** = connect your ASC API key once in [appeeky.com → Settings → Integrations](https://appeeky.com). Data syncs nightly and is then accessible via the Appeeky API without repeated ASC auth. See [appeeky-connect.md](appeeky-connect.md) and the `asc-metrics` skill.

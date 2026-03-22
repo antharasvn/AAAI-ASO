@@ -44,6 +44,11 @@ Tools and integrations that ASO skills can use for real-time App Store data.
 | New releases | `GET /v1/new-releases` | `get_new_releases` | [appeeky-market.md](integrations/appeeky-market.md) |
 | Discovery feed | `GET /v1/discover` | `discover` | [appeeky-market.md](integrations/appeeky-market.md) |
 | New #1 apps | `GET /v1/discover/new-number-1` | `get_new_number_1` | [appeeky-market.md](integrations/appeeky-market.md) |
+| ASC overview metrics | `GET /v1/connect/metrics` | — | [appeeky-connect.md](integrations/appeeky-connect.md) |
+| ASC list apps | `GET /v1/connect/metrics/apps` | — | [appeeky-connect.md](integrations/appeeky-connect.md) |
+| ASC app detail (daily + countries) | `GET /v1/connect/metrics/apps/:appId` | — | [appeeky-connect.md](integrations/appeeky-connect.md) |
+
+> **Note:** ASC Connect endpoints return **exact first-party data** from App Store Connect (not estimates). Requires connected ASC account (Indie plan+).
 
 ### Skill → Tool Mapping
 
@@ -68,11 +73,25 @@ Which skills use which Appeeky tools:
 | `app-marketing-context` | `get_app`, `get_app_keywords`, `search_apps` |
 | `market-movers` | `get_market_movers`, `get_market_activity`, `get_category_top`, `get_app` |
 | `market-pulse` | `get_market_movers`, `get_market_activity`, `get_trending_keywords`, `get_featured_apps`, `get_new_releases`, `get_new_number_1`, `get_downloads_to_top` |
+| `asc-metrics` | `GET /v1/connect/metrics`, `GET /v1/connect/metrics/apps/:appId` (REST only) |
+| `seasonal-aso` | `get_keyword_suggestions`, `get_keyword_metrics`, `get_trending_keywords` |
+| `in-app-events` | `get_keyword_suggestions`, `get_keyword_metrics`, `get_app` |
+| `android-aso` | `get_keyword_suggestions`, `get_keyword_metrics`, `get_app_reviews`, `get_app` |
+| `onboarding-optimization` | `get_app_intelligence`, `get_app_reviews` |
+| `rating-prompt-strategy` | `get_app`, `get_app_reviews` |
+| `app-icon-optimization` | `get_app` (screenshots, competitor screenshots) |
+| `subscription-lifecycle` | `get_app_intelligence`, `get_app_reviews` |
+| `app-clips` | `get_keyword_ranks`, `get_app` |
+| `apple-search-ads` | `get_keyword_metrics`, `get_keyword_suggestions`, `get_keyword_ranks` |
+| `press-and-pr` | `get_app`, `search_apps` |
+| `competitor-tracking` | `get_app`, `get_app_keywords`, `get_app_reviews`, `get_market_movers`, `get_market_activity` |
+| `crash-analytics` | `get_app`, `get_app_reviews` |
 
 ## Other Useful Tools
 
 | Tool | Purpose | Integration |
 |------|---------|-------------|
 | **App Store Connect** | Official Apple analytics, releases, IAP management | [app-store-connect.md](integrations/app-store-connect.md) |
+| **Appeeky Connect** | Exact ASC sales/revenue data synced into Appeeky | [appeeky-connect.md](integrations/appeeky-connect.md) |
 | **RevenueCat** | Subscription analytics, paywall A/B testing | [revenuecat.md](integrations/revenuecat.md) |
 | **Firebase** | In-app analytics, crash reporting, A/B testing | [firebase.md](integrations/firebase.md) |
