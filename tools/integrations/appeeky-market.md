@@ -1,5 +1,7 @@
 # Appeeky — Market Intelligence
 
+> **Status as of v1.1.0:** For keyword trending and category top keywords, **AppTweak MCP** (`at_trending_keywords`, `at_category_top_keywords`) is now primary — see [`apptweak.md`](./apptweak.md). Other market intelligence endpoints (charts, featured apps, new releases) remain primary in Appeeky.
+
 Category charts, featured apps, new releases, trending data, download estimates, and chart movement tracking.
 
 **Base URL:** `https://api.appeeky.com`

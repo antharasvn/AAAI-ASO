@@ -1,5 +1,7 @@
 # Appeeky — ASO Tools
 
+> **Status as of v1.1.0:** For keyword-driven ASO workflows, **AppTweak MCP is now the primary data source** — see [`apptweak.md`](./apptweak.md). The Appeeky ASO tools documented below remain supported and are used as fallback when AppTweak is not installed.
+
 Automated ASO audit, metadata validation, optimization suggestions, and competitor reports.
 
 **Base URL:** `https://api.appeeky.com`

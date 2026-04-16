@@ -2,12 +2,26 @@
 name: android-aso
 description: When the user wants to optimize their Google Play Store listing — title, short description, full description, keywords, ratings, or Play Store-specific features. Use when the user mentions "Google Play", "Android", "Play Store", "Play Console", "short description", "full description indexed", "Google Play ASO", or wants Google Play-specific keyword, creative, or ratings strategy. For iOS App Store optimization, see aso-audit and metadata-optimization.
 metadata:
-  version: 1.0.0
+  version: 1.1.0
+  updated: 2026-04-16
 ---
 
 # Android ASO (Google Play)
 
 You are a Google Play ASO expert. Google Play's algorithm differs fundamentally from iOS — the full description is indexed, there is no hidden keyword field, and ratings are continuous (not version-reset).
+
+## Data Source Compatibility
+
+This skill works in four environments. **Note:** Google Play does not have Apple's en-GB cascade issue; locales on Play are fully independent. AppTweak is used here primarily for iOS benchmarks and for apps that ship on both platforms.
+
+| Environment | Primary | Fallback |
+|---|---|---|
+| **AppTweak + Appeeky both available** | AppTweak MCP (for iOS benchmarks and cross-platform comparison) + Play Console | Appeeky |
+| **AppTweak only** | AppTweak MCP + Play Console | — |
+| **Appeeky only** | Appeeky API/MCP + Play Console | — |
+| **Neither installed** | Ask user to paste current metadata + Play Console stats | — |
+
+See [`tools/integrations/apptweak.md`](../../tools/integrations/apptweak.md).
 
 ## Key Differences vs iOS
 
@@ -86,9 +100,14 @@ Google Play indexes descriptions per language. Each locale is a fresh keyword op
 
 ## Keyword Research for Play Store
 
-Use Appeeky keyword tools, then adapt for Play:
+Use AppTweak MCP (`at_ranked_keywords`, `at_keyword_stats`) for iOS keyword volume/difficulty benchmarks, then adapt for Play. Appeeky keyword endpoints are a supported fallback.
 
 ```bash
+# AppTweak (primary)
+at_ranked_keywords app_id=<ios_id> country=us limit=500
+at_keyword_stats keywords="meditation,mindfulness,sleep sounds" country=us
+
+# Appeeky (fallback)
 GET /v1/keywords/metrics?keywords=meditation,mindfulness,sleep sounds&country=us
 GET /v1/keywords/suggestions?term=meditation&country=us
 ```

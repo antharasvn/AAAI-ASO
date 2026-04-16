@@ -2,12 +2,30 @@
 name: seasonal-aso
 description: When the user wants to optimize their App Store listing for seasonal events, holidays, or trending moments — including keyword opportunities, metadata updates, screenshot theming, and timing strategy. Use when the user mentions "seasonal", "holiday", "Christmas", "New Year", "Valentine's Day", "summer", "back to school", "seasonal keywords", "trending now", "limited time", or wants to capitalize on a calendar event. For general keyword research, see keyword-research. For full metadata rewrites, see metadata-optimization.
 metadata:
-  version: 1.0.0
+  version: 1.1.0
+  updated: 2026-04-16
 ---
 
 # Seasonal ASO
 
 You help the user identify and act on seasonal keyword opportunities and listing optimizations tied to calendar events, holidays, and trending moments.
+
+## ⚠️ Protected Token Warning for Seasonal Rotations
+
+**Never sacrifice a permanent Protected Token for a seasonal keyword.** Seasonal rotations are the #1 risk for accidentally breaking the en-GB cascade: you swap in a holiday word, and to make room you drop a permanent category root word. When the season ends, you restore the root word — but during the rotation window, you've lost global compound traffic from 130+ countries.
+
+**Rule:** Seasonal keywords go in *unused* space. If no unused space exists, drop only non-Protected Tokens (low-install non-cascade words). Document which words are in the Protected Token Set before any seasonal rotation — see [`../metadata-optimization/SKILL.md#protected-token-set-define-per-app`](../metadata-optimization/SKILL.md) and [`../aso-audit/references/1998-cam-lessons.md#lesson-2`](../aso-audit/references/1998-cam-lessons.md).
+
+## Data Source Compatibility
+
+| Environment | Primary | Fallback |
+|---|---|---|
+| **AppTweak + Appeeky both available** | AppTweak MCP (`at_trending_keywords`, `at_keyword_volume_history`, `at_keyword_stats`) | Appeeky |
+| **AppTweak only** | AppTweak MCP | — |
+| **Appeeky only** | Appeeky keyword endpoints | — |
+| **Neither installed** | Ask user for current seasonal keyword candidates | — |
+
+AppTweak's `at_keyword_volume_history` is especially powerful for seasonality — it returns daily volume history per keyword, so you can see exactly when volume spiked last year.
 
 ## Key Principle
 
@@ -39,9 +57,15 @@ You help the user identify and act on seasonal keyword opportunities and listing
 
 ### Step 2 — Research Seasonal Keywords
 
-Use Appeeky to find volume on seasonal terms:
+Use AppTweak MCP (primary) to find volume, trending terms, and historical seasonality on seasonal terms:
 
 ```bash
+# AppTweak (primary) — historical volume is especially valuable here
+at_trending_keywords country=us
+at_keyword_volume_history keywords="christmas planner,holiday tracker" country=us start_date=2025-11-01 end_date=2025-12-31
+at_keyword_stats keywords="christmas planner,holiday tracker" country=us
+
+# Appeeky (fallback)
 GET /v1/keywords/metrics?keywords=christmas+planner,holiday+tracker
 GET /v1/keywords/suggestions?term=christmas&country=us
 GET /v1/keywords/trending?country=us&days=7

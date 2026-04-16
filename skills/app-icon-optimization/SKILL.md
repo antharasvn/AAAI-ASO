@@ -2,7 +2,8 @@
 name: app-icon-optimization
 description: When the user wants to design, test, or improve their app icon to increase tap-through rate and conversions in App Store search and browse. Use when the user mentions "app icon", "icon design", "icon A/B test", "icon variants", "tap-through rate", "icon conversion", "icon refresh", or wants to know what makes a good app icon. For screenshot optimization, see screenshot-optimization. For full listing A/B tests, see ab-test-store-listing.
 metadata:
-  version: 1.0.0
+  version: 1.1.0
+  updated: 2026-04-16
 ---
 
 # App Icon Optimization
@@ -111,7 +112,7 @@ Test one variable at a time:
 
 - **Primary metric:** Install conversion rate (impressions → installs)
 - **Minimum sample:** 1,000+ impressions per variant for reliable signal
-- **Significance threshold:** p < 0.05 or Appeeky/Play Console confidence indicator
+- **Significance threshold:** p < 0.05 or AppTweak / Appeeky / Play Console confidence indicator
 
 ## Icon Audit
 

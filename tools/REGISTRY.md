@@ -2,9 +2,32 @@
 
 Tools and integrations that ASO skills can use for real-time App Store data.
 
-## Appeeky — Primary Integration
+> **Recommended setup (as of v1.1.0):** Install **AppTweak MCP** for keyword/rank intelligence — see [apptweak.md](integrations/apptweak.md). **Appeeky** remains a supported fallback for keyword workflows and the primary for first-party ASC sync via Appeeky Connect. See [`scripts/snippets/compatibility-contract.md`](../scripts/snippets/compatibility-contract.md) for the 4-environment fallback policy used by all updated skills.
 
-[Appeeky](https://appeeky.com) provides real-time App Store intelligence via REST API and MCP Server.
+## AppTweak — Primary for Keyword / Rank Intelligence
+
+[AppTweak](https://www.apptweak.com) is the recommended provider for keyword research, rank tracking, competitor gap analysis, and ASA bidding intelligence.
+
+### Skill → AppTweak Tool Mapping
+
+| Skill | Primary AppTweak Tools |
+|---|---|
+| `aso-audit` | `at_check_credits`, `at_app_metadata`, `at_ranked_keywords`, `at_aso_keyword_report`, `at_keyword_rankings` (cascade check), `at_app_downloads`, `at_app_ratings` |
+| `keyword-research` | `at_ranked_keywords`, `at_aso_keyword_report`, `at_keyword_opportunities`, `at_keyword_stats`, `at_category_top_keywords`, `at_trending_keywords` |
+| `metadata-optimization` | `at_app_metadata`, `at_keyword_stats`, `at_keyword_rankings` |
+| `localization` | `at_ranked_keywords` (per country), `at_app_metadata` (per country), `at_app_downloads` (per country) |
+| `competitor-analysis` | `at_app_metadata`, `at_ranked_keywords`, `at_keyword_opportunities`, `at_live_search`, `at_app_downloads`, `at_app_reviews` |
+| `apple-search-ads` | `at_keyword_stats`, `at_asa_bidding_apps`, `at_asa_bid_history` |
+| `seasonal-aso` | `at_trending_keywords`, `at_keyword_volume_history` |
+| `competitor-tracking` | `at_ranked_keywords`, `at_metadata_changes`, `at_asa_bid_history` |
+| `android-aso` | `at_keyword_stats`, `at_ranked_keywords` (iOS benchmarks) |
+| `app-icon-optimization` | `at_app_metadata` (for confidence indicator benchmarks) |
+
+See [apptweak.md](integrations/apptweak.md) for the full AppTweak tool reference. Only tools actually used by skills are documented — additional AppTweak tools exist and are covered in the official AppTweak MCP docs.
+
+## Appeeky — Supported Fallback + First-Party ASC Sync
+
+[Appeeky](https://appeeky.com) provides real-time App Store intelligence via REST API and MCP Server. As of v1.1.0, Appeeky is a **supported fallback** for keyword/rank workflows (skills will fall back automatically if AppTweak is not installed) and the **primary** integration for first-party ASC data via **Appeeky Connect** (unchanged).
 
 ### Connection Methods
 

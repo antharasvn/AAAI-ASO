@@ -2,12 +2,38 @@
 name: competitor-analysis
 description: When the user wants to analyze competitors' App Store strategy, find keyword gaps, or understand competitive positioning. Also use when the user mentions "competitor analysis", "competitive research", "keyword gap", "what are my competitors doing", or "compare my app to". For keyword-specific research, see keyword-research. For metadata writing, see metadata-optimization.
 metadata:
-  version: 1.0.0
+  version: 1.1.0
+  updated: 2026-04-16
 ---
 
 # Competitor Analysis
 
 You are an expert in competitive intelligence for mobile apps. Your goal is to perform a thorough analysis of the user's competitors and identify actionable opportunities to outperform them.
+
+## Data Source Compatibility
+
+This skill works in four environments:
+
+| Environment | Primary | Fallback |
+|---|---|---|
+| **AppTweak + Appeeky both available** | AppTweak MCP | Appeeky (cross-check) |
+| **AppTweak only** | AppTweak MCP | — |
+| **Appeeky only** | Appeeky API/MCP (`aso_competitor_report`, `compare_keywords`, `get_app_intelligence`) | — |
+| **Neither installed** | Ask user to paste competitor metadata and rankings | — |
+
+### Primary AppTweak Tools
+
+| Tool | Purpose |
+|---|---|
+| `at_app_metadata` | Competitor title, subtitle, description, screenshots, `customers_also_bought` |
+| `at_ranked_keywords` | All keywords a competitor ranks for (up to 500) per country |
+| `at_keyword_opportunities` | **Composite** — auto-finds competitors via `customers_also_bought` and returns keywords they rank for that you don't |
+| `at_live_search` | Top apps ranking for a term right now (verify competitor SERP dominance) |
+| `at_app_downloads` | Daily download estimates (competitive sizing) |
+| `at_app_reviews` | Review sentiment analysis |
+| `at_app_ratings` | Rating trend over 30 days |
+
+See [`tools/integrations/apptweak.md`](../../tools/integrations/apptweak.md).
 
 ## Initial Assessment
 
@@ -21,12 +47,33 @@ You are an expert in competitive intelligence for mobile apps. Your goal is to p
 
 If the user doesn't know their competitors, find them through:
 
-1. **Category chart** — Top apps in the same category
-2. **Keyword overlap** — Apps ranking for the same keywords
-3. **Similar apps** — Apple's "You Might Also Like" section
-4. **User perception** — Ask "What would your users use if your app didn't exist?"
+1. **`at_app_metadata` → customers_also_bought** — Apple's own "Apps That Users Bought Next" list
+2. **`at_keyword_opportunities`** — This composite tool automatically identifies competitors via `customers_also_bought` and returns their keyword gaps
+3. **`at_live_search`** — Search top keywords to see who dominates SERPs
+4. **Category chart** — Top apps in the same category
+5. **User perception** — Ask "What would your users use if your app didn't exist?"
 
 Recommend analyzing 3-5 competitors: 2 direct competitors, 1-2 aspirational (larger), 1 emerging.
+
+## en-GB Cascade Awareness in Competitor View
+
+When analyzing competitors, **always pull their en-GB metadata specifically**. This reveals their global compound strategy.
+
+### Why
+
+en-GB is the universal secondary locale for 130+ countries. Whatever words a competitor keeps in en-GB, those words are their global compound foundation — they ripple into DE/JP/FR/IT/BR and every other en-GB-indexed market. Missing this means missing the biggest signal about their international strategy.
+
+### Procedure
+
+1. `at_app_metadata app_id={competitor} country=gb` — their actual UK-stored metadata
+2. Compare to their `country=us` metadata — are they mirrored? (they should be, per best practice)
+3. Identify Protected Tokens: what category-root and compound-forming words do they keep in en-GB?
+4. Compare your en-GB content to theirs — are you missing words they have?
+5. For 3 top competitors, also pull `at_ranked_keywords country=de,jp,fr,it,br` to see where their en-GB cascade is landing internationally
+
+**Competitive intelligence insight:** A competitor who keeps generic category words in en-GB (e.g., "video", "camera", "editor") captures more international compound traffic than one who optimizes only for US keywords. Your en-GB strategy should at minimum match theirs.
+
+Full cross-locale map + cascade rationale in [`../localization/references/cross-locale-map.md`](../localization/references/cross-locale-map.md).
 
 ## Analysis Framework
 
@@ -161,3 +208,9 @@ These are your unique advantages — protect them.
 - `screenshot-optimization` — Redesign based on competitive creative analysis
 - `aso-audit` — Audit your own listing with competitive context
 - `ua-campaign` — Competitive paid acquisition strategy
+
+## References
+
+- [`../aso-audit/references/1998-cam-lessons.md`](../aso-audit/references/1998-cam-lessons.md) — Protected Token Set, en-GB Cascade Check
+- [`../localization/references/cross-locale-map.md`](../localization/references/cross-locale-map.md) — Cross-locale indexing map (en-GB universal secondary, Japan exception)
+- [`../../tools/integrations/apptweak.md`](../../tools/integrations/apptweak.md) — AppTweak MCP tool reference

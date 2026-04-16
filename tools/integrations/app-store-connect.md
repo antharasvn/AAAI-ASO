@@ -86,20 +86,28 @@ curl -H "Authorization: Bearer $JWT_TOKEN" \
 - `/v1/apps/{id}/customerReviewResponses` — Respond to reviews
 - `/v1/apps/{id}/appAvailabilities` — Country availability
 
-## When to Use App Store Connect vs Appeeky
+## When to Use App Store Connect vs AppTweak vs Appeeky
 
-| Need | App Store Connect | Appeeky Connect | Appeeky |
-|------|------------------|----------------|---------|
-| Your app's exact download numbers | ✓ (official) | ✓ (synced daily) | Estimates |
-| Your app's exact revenue | ✓ (official) | ✓ (synced daily) | Estimates |
-| IAP counts, trials, subscriptions | ✓ (official) | ✓ (synced daily) | ✗ |
-| Country breakdown (exact) | ✓ | ✓ (synced daily) | ✗ |
-| Competitor data | ✗ | ✗ | ✓ |
-| Keyword rankings | ✗ | ✗ | ✓ |
-| Keyword volume/difficulty | ✗ | ✗ | ✓ |
-| A/B test setup | ✓ (native) | ✗ | ✗ |
-| Review management | ✓ (respond) | ✗ | ✓ (analyze) |
-| ASO audit | ✗ | ✗ | ✓ |
-| Market intelligence | Limited | ✗ | ✓ |
+| Need | App Store Connect | Appeeky Connect | AppTweak | Appeeky |
+|------|------------------|----------------|----------|---------|
+| Your app's exact download numbers | ✓ (official) | ✓ (synced daily) | Estimates | Estimates |
+| Your app's exact revenue | ✓ (official) | ✓ (synced daily) | Estimates | Estimates |
+| IAP counts, trials, subscriptions | ✓ (official) | ✓ (synced daily) | ✗ | ✗ |
+| Country breakdown (exact) | ✓ | ✓ (synced daily) | ✗ | ✗ |
+| Competitor metadata / rankings | ✗ | ✗ | ✓ **primary** | ✓ (fallback) |
+| Keyword rankings (500 per app per country) | ✗ | ✗ | ✓ **primary** | ✓ (fallback) |
+| Keyword volume / difficulty / KEI | ✗ | ✗ | ✓ **primary** | ✓ (fallback) |
+| Historical rank & volume time series | ✗ | ✗ | ✓ **primary** | Limited |
+| Keyword opportunity gap analysis | ✗ | ✗ | ✓ **primary** | Limited |
+| ASA bidding intelligence | Limited | ✗ | ✓ **primary** | ✗ |
+| A/B test setup | ✓ (native) | ✗ | ✗ | ✗ |
+| Review management (respond) | ✓ (respond) | ✗ | ✗ | ✗ |
+| Review analysis | ✗ | ✗ | ✓ | ✓ |
+| ASO audit / metadata validation | ✗ | ✗ | ✓ **primary** | ✓ (fallback) |
+| Market intelligence (charts, featured) | Limited | ✗ | Limited | ✓ **primary** |
 
-**Appeeky Connect** = connect your ASC API key once in [appeeky.com → Settings → Integrations](https://appeeky.com). Data syncs nightly and is then accessible via the Appeeky API without repeated ASC auth. See [appeeky-connect.md](appeeky-connect.md) and the `asc-metrics` skill.
+**AppTweak** (v1.1.0+) = primary source for keyword/rank intelligence. See [apptweak.md](apptweak.md).
+
+**Appeeky Connect** = primary source for first-party ASC sync. Connect your ASC API key once in [appeeky.com → Settings → Integrations](https://appeeky.com). Data syncs nightly. See [appeeky-connect.md](appeeky-connect.md) and the `asc-metrics` skill.
+
+**Appeeky** = supported fallback for keyword workflows and primary for market-intelligence (charts, featured apps). See [appeeky.md](appeeky.md).

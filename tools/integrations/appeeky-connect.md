@@ -1,5 +1,7 @@
 # Appeeky — App Store Connect Metrics
 
+> **Status as of v1.1.0: UNCHANGED.** Appeeky Connect is the first-party App Store Connect sync product and is NOT replaced by AppTweak. This remains the primary source for exact downloads, revenue, IAPs, and subscriptions data from your own ASC account. AppTweak provides estimated third-party data, not first-party ASC sync.
+
 Synced Sales and Trends data from your connected App Store Connect account — real downloads, revenue, IAPs, and subscriptions. No ASC credentials needed per request; data is synced nightly into Appeeky.
 
 **Base URL:** `https://api.appeeky.com`

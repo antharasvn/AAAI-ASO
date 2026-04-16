@@ -1,5 +1,7 @@
 # Appeeky — Keyword Intelligence
 
+> **Status as of v1.1.0:** For keyword research, rank tracking, and volume/difficulty scoring, **AppTweak MCP is now the primary data source** — see [`apptweak.md`](./apptweak.md). The Appeeky keyword endpoints documented below remain supported as fallback.
+
 Keyword research, volume scoring, difficulty analysis, and competitive keyword tools.
 
 **Base URL:** `https://api.appeeky.com`

@@ -2,12 +2,38 @@
 name: keyword-research
 description: When the user wants to discover, evaluate, or prioritize App Store keywords. Also use when the user mentions "keyword research", "find keywords", "search volume", "keyword difficulty", "keyword ideas", or "what keywords should I target". For implementing keywords into metadata, see metadata-optimization. For auditing current keyword performance, see aso-audit.
 metadata:
-  version: 1.0.0
+  version: 1.1.0
+  updated: 2026-04-16
 ---
 
 # Keyword Research
 
 You are an expert ASO keyword researcher with deep knowledge of App Store search behavior, keyword indexing, and ranking algorithms. Your goal is to help the user discover high-value keywords and build a prioritized keyword strategy.
+
+## Data Source Compatibility
+
+This skill works in four environments. Always check which tools are available, then follow the listed order:
+
+| Environment | Primary | Fallback | Behavior |
+|---|---|---|---|
+| **AppTweak + Appeeky both available** | AppTweak MCP (`at_` tools) | Appeeky (cross-check) | Use AppTweak for all keyword/rank data. Appeeky is a secondary cross-check for suspicious results. |
+| **AppTweak only** | AppTweak MCP | — | Use AppTweak for everything. Recommended setup. |
+| **Appeeky only** | Appeeky API/MCP | — | Substitute Appeeky keyword endpoints for the `at_` tools referenced below. All scoring logic still applies. |
+| **Neither installed** | Ask user to paste data | — | Ask for current ranked keyword list + competitor list. Score manually. |
+
+### Primary AppTweak Tools
+
+| Tool | Purpose |
+|---|---|
+| `at_check_credits` | Run first every session |
+| `at_ranked_keywords` | All keywords the app ranks for (up to 500) per country |
+| `at_aso_keyword_report` | Ranked keywords enriched with volume, difficulty, KEI, sorted |
+| `at_keyword_opportunities` | Competitor keyword gap analysis |
+| `at_keyword_stats` | Volume + difficulty for 5 candidate keywords at a time |
+| `at_category_top_keywords` | Top 50 keywords for an app category |
+| `at_trending_keywords` | Top 50 trending keywords per country |
+
+See [`tools/integrations/apptweak.md`](../../tools/integrations/apptweak.md) and [`tools/integrations/appeeky-keywords.md`](../../tools/integrations/appeeky-keywords.md).
 
 ## Initial Assessment
 
@@ -54,18 +80,58 @@ For each keyword candidate, evaluate:
 | **Intent** | Is the searcher looking to download? | "how to edit photos" vs "photo editor app" |
 | **Current Rank** | Where the app currently ranks (if at all) | Easier to improve existing rank than start from zero |
 
+### Phase 2.5: Install Attribution Tiers (CRITICAL)
+
+**KEI alone is not enough.** Classify every keyword by real-world installs before placement decisions. Some high-KEI keywords drive zero installs; some mediocre-KEI keywords drive hundreds. Real installs > theoretical KEI.
+
+| Tier | Sum Installs | Placement | Why |
+|---|---|---|---|
+| **Tier 1: Title** | >400 | App title | Highest weight, proven volume |
+| **Tier 2: Subtitle** | 50-400 | Subtitle | Medium weight, proven volume |
+| **Tier 3: en-US Keywords** | 10-400 | en-US keyword field, ordered by installs | Primary keyword field |
+| **Tier 4: Other US locales** | 1-10 | US-indexed secondary locale keyword fields | Cross-locale attribution |
+| **Tier 5: Speculative** | 0 | Fill remaining space, highest-KEI first | Growth bet, not a safe pick |
+
+**Data source:** AppTweak's Keyword Combinations UI (dashboard-only, no API) groups ranked keywords by root word and shows Sum Installs per root. Ask the user to paste a CSV export, or approximate by tokenizing `at_ranked_keywords` results.
+
+Full rationale + case study in [`../aso-audit/references/1998-cam-lessons.md#lesson-3`](../aso-audit/references/1998-cam-lessons.md).
+
+### Phase 2.6: International Keyword Importance Check (MANDATORY for any US keyword removal)
+
+**Before removing ANY keyword from en-US based on US-only install data, check its international importance.** A keyword with 0 US installs may drive significant traffic in non-US markets via the en-GB mirror.
+
+For any keyword under consideration for removal:
+
+1. `at_keyword_rankings` with `country=gb,de,jp,fr,it,br` — check rank in top 6 en-GB markets
+2. `at_keyword_stats` with `country=gb` — check GB volume (proxy for 130+ countries)
+3. If the keyword compounds with other title/subtitle words, re-check those compounds in all 6 markets
+4. **If ANY compound ranks top 20 in ANY market → LOCKED → do not remove**
+
+**Real incident (April 2026):** A camera app dropped "video" from en-GB subtitle based on 0 US installs. "video camera" and "video editor" were top-5 search terms in DE/JP/FR/IT/BR. Global traffic dropped ~25% in 72 hours.
+
+Full procedure in [`../aso-audit/references/1998-cam-lessons.md#lesson-1-en-gb-global-cascade-check`](../aso-audit/references/1998-cam-lessons.md).
+
 ### Phase 3: Opportunity Scoring
 
-Calculate an **Opportunity Score** for each keyword:
+Calculate an **Opportunity Score** for each keyword, incorporating install attribution:
 
 ```
-Opportunity = (Volume × 0.4) + ((100 - Difficulty) × 0.3) + (Relevance × 0.3)
+opportunity = (volume × 0.4) + ((100 - difficulty) × 0.3) + (relevance × 0.3)
+
+# Install attribution boost — proven winners rank higher
+if install_count > 400:  score ×= 2.0    # Tier 1: proven title-tier
+elif install_count > 50: score ×= 1.5    # Tier 2: proven subtitle-tier
+elif install_count > 10: score ×= 1.2    # Tier 3: proven keyword-tier
+
+# Almost-there boost
+if 11 <= current_rank <= 30: score ×= 1.2
 ```
 
 Where:
 - Volume: 1-100 scale
 - Difficulty: 1-100 scale (inverted — lower difficulty = higher score)
 - Relevance: 1-100 scale (manual assessment)
+- install_count: Sum Installs from AppTweak Keyword Combinations
 
 ### Phase 4: Keyword Grouping
 
@@ -139,3 +205,9 @@ Keyword Field (100):  [remaining keywords, comma-separated]
 - `aso-audit` — Broader audit that includes keyword performance
 - `competitor-analysis` — Deep dive into competitor keyword strategies
 - `localization` — Keyword research for international markets
+
+## References
+
+- [`../aso-audit/references/1998-cam-lessons.md`](../aso-audit/references/1998-cam-lessons.md) — Install Attribution Tiers, en-GB Cascade Check, Protected Token Set
+- [`../localization/references/cross-locale-map.md`](../localization/references/cross-locale-map.md) — Apple cross-locale indexing map
+- [`../../tools/integrations/apptweak.md`](../../tools/integrations/apptweak.md) — AppTweak MCP tool reference

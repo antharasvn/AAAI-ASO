@@ -1,5 +1,7 @@
 # Appeeky — App Intelligence
 
+> **Status as of v1.1.0:** For keyword and rank intelligence (ASO audit, keyword research, localization, competitor analysis), **AppTweak MCP is now the primary data source** — see [`apptweak.md`](./apptweak.md). Appeeky remains a supported fallback and continues to provide app metadata, reviews, and intelligence endpoints documented below. Appeeky Connect (first-party ASC sync) is unchanged.
+
 Real-time App Store metadata, reviews, screenshots, and intelligence data.
 
 **Website:** [appeeky.com](https://appeeky.com)

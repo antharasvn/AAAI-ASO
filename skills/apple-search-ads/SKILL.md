@@ -2,12 +2,43 @@
 name: apple-search-ads
 description: When the user wants to set up, optimize, or scale Apple Search Ads (ASA) campaigns — including keyword bidding, match types, campaign structure, Creative Product Sets, CPP routing, and ROAS optimization. Use when the user mentions "Apple Search Ads", "ASA", "Search Ads", "Search tab ads", "Today tab ads", "CPT", "TTR", "Search Match", "exact match", "broad match", "CPP in ads", "ASA bidding", or "Search Ads budget". For Meta/Google UAC/TikTok paid UA, see ua-campaign.
 metadata:
-  version: 1.0.0
+  version: 1.1.0
+  updated: 2026-04-16
 ---
 
 # Apple Search Ads
 
 You are a specialist in Apple Search Ads (ASA) — the only ad platform that places ads natively within the App Store. ASA drives highly qualified installs because users are already in purchase intent.
+
+## Data Source Compatibility
+
+| Environment | Primary | Fallback |
+|---|---|---|
+| **AppTweak + Appeeky both available** | AppTweak MCP (`at_keyword_stats`, `at_asa_bidding_apps`, `at_asa_bid_history`) + ASA API | Appeeky (fallback) |
+| **AppTweak only** | AppTweak MCP + ASA API | — |
+| **Appeeky only** | Appeeky API/MCP + ASA API | — |
+| **Neither installed** | ASA API only — ask user for keyword ideas | — |
+
+AppTweak's `at_asa_bidding_apps` and `at_asa_bid_history` give competitive ASA intelligence not available elsewhere — see [`tools/integrations/apptweak.md`](../../tools/integrations/apptweak.md).
+
+## ASA Keyword Tier Classification (from 1998 Cam production work)
+
+Before placing bids, classify every candidate keyword into one of 5 tiers. This prevents over-bidding on low-value terms and under-bidding on proven winners.
+
+| Tier | Description | Example | Campaign Placement |
+|---|---|---|---|
+| **A — Brand** | Your own brand name variants | `{appname}`, misspellings | Brand Defense campaign, highest priority, always win |
+| **B — Rank Boost** | Terms where you rank #11-25 organically + difficulty ≤55 + popularity ≥30 | Generic category + your feature | Rank Boost overlay — pay to push rank into top-10 where organic cascades |
+| **C — Category** | High-volume generic category terms | `meditation app`, `photo editor` | Category campaign, exact match, ROAS-positive markets only |
+| **D — Competitor** | Top 3-5 rival brand names | `headspace`, `calm` | Competitor campaign, exact match, conservative bids |
+| **E — Long-tail / Discovery** | Long-tail phrases + MaxConv seed keywords | `meditation for anxiety` | MaxConv campaign, Search Match ON |
+
+**Rank Boost priority formula:** `(volume / difficulty) × (25 - distance_from_top5)`
+
+Pull `at_keyword_rankings` + `at_asa_bidding_apps` together to identify Rank Boost candidates:
+- Many competitors bidding + your rank #11-25 → ideal (pay to boost, organic follows)
+- Few competitors bidding + your rank top 5 → Brand Defense only
+- Competitor bidding heavily on YOUR brand → add defensive Brand exact bids
 
 ## Why ASA Is Different
 
@@ -79,8 +110,15 @@ Account
 - High-volume generic terms: "meditation app", "habit tracker", "budget planner"
 - Long-tail terms: "meditation app for anxiety", "daily habit tracker free"
 
-Use Appeeky to validate volume and difficulty:
+Use AppTweak MCP (primary) to validate volume, difficulty, and competitive bidding:
+
 ```bash
+# AppTweak (primary)
+at_keyword_stats keywords="meditation app,mindfulness,sleep sounds" country=us
+at_asa_bidding_apps keywords="meditation app" country=us  # which apps are bidding
+at_asa_bid_history app_id=<competitor_id> country=us       # competitor ASA history
+
+# Appeeky (fallback)
 GET /v1/keywords/metrics?keywords=meditation+app,mindfulness,sleep+sounds&country=us
 GET /v1/keywords/suggestions?term=meditation&country=us
 ```

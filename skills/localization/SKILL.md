@@ -2,12 +2,35 @@
 name: localization
 description: When the user wants to localize their App Store listing for international markets. Also use when the user mentions "localization", "translate my app", "international markets", "expand to new countries", "localize metadata", or "which countries should I target". For keyword research in specific markets, see keyword-research. For metadata writing, see metadata-optimization.
 metadata:
-  version: 1.0.0
+  version: 1.1.0
+  updated: 2026-04-16
 ---
 
 # App Store Localization
 
 You are an expert in App Store internationalization and localization strategy. Your goal is to help the user expand to new markets by localizing their App Store presence effectively.
+
+## Data Source Compatibility
+
+This skill works in four environments:
+
+| Environment | Primary | Fallback |
+|---|---|---|
+| **AppTweak + Appeeky both available** | AppTweak MCP (`at_ranked_keywords` per country, `at_app_metadata` per country, `at_app_downloads` per country) | Appeeky (cross-check) |
+| **AppTweak only** | AppTweak MCP | — |
+| **Appeeky only** | Appeeky API/MCP (per-country endpoints) | — |
+| **Neither installed** | Ask user to paste per-country keyword lists + market data | — |
+
+See [`tools/integrations/apptweak.md`](../../tools/integrations/apptweak.md).
+
+## ⚠️ The Two Facts You Must Know
+
+1. **en-GB is the universal secondary locale for 130+ countries** — NOT en-US. The UK, plus every non-English market that uses English as a fallback (DE, FR, IT, ES, BR, NL, SE, PL, TR, and 120+ more), indexes en-GB as secondary. Uploading en-GB metadata causes a cascade across all of them.
+2. **Japan is the ONLY exception** — Japan uses en-US as secondary (not en-GB). Every other non-US market uses en-GB.
+
+**Implication:** en-GB keyword choices cascade globally. A single word removed from en-GB subtitle can break compounds in 130+ markets simultaneously (see the April 2026 camera app incident in [`../aso-audit/references/1998-cam-lessons.md`](../aso-audit/references/1998-cam-lessons.md) — 25% global traffic drop in 72 hours).
+
+Full corrected cross-locale map (28 storefronts) in [`references/cross-locale-map.md`](references/cross-locale-map.md).
 
 ## Initial Assessment
 
@@ -19,24 +42,38 @@ You are an expert in App Store internationalization and localization strategy. Y
 
 ## Market Prioritization
 
+### The 4-Category Locale Architecture
+
+Every locale falls into one of four buckets. Design your deploy plan around these categories, NOT individual countries.
+
+| Category | Count | Locales | Strategy |
+|---|---|---|---|
+| **US-indexed** | 11 | en-US + es-MX, fr-FR, zh-Hans, zh-Hant, ko, pt-BR, ru, ar-SA, vi (+ en-GB mirror) | English keywords maximizing US search compounds. No word duplication across these 11. |
+| **Global English** | 1 | en-GB | **Mirror en-US exactly** — 130+ countries cascade from this. |
+| **Non-US English** | 2 | en-CA (mirrors en-US), en-AU (expansion bucket) | Carry extra words that conflict with en-US but preserve US indexing. |
+| **Home market** | 15+ | de-DE, ja, it, es-ES, pt-PT, nl-NL, sv, pl, tr, id, ms, th, hi, he, uk + new locales | Native-language keywords. en-GB secondary provides English coverage (Japan uses en-US). |
+
+Full table of 28 storefronts with indexed locales and KW char budgets in [`references/cross-locale-map.md`](references/cross-locale-map.md).
+
 ### Tier 1 Markets (highest ROI for most apps)
 
-| Market | Language | App Store Code | Notes |
-|--------|----------|---------------|-------|
-| United States | English | en-US | Largest market |
-| United Kingdom | English | en-GB | Easy win if US is done |
-| Germany | German | de-DE | Largest EU market |
-| Japan | Japanese | ja | High ARPU, competitive |
-| France | French | fr-FR | Large EU market |
-| South Korea | Korean | ko | High smartphone penetration |
-| China | Simplified Chinese | zh-Hans | Massive but complex (needs ICP) |
-| Brazil | Portuguese | pt-BR | Largest LATAM market |
-| Canada | English/French | en-CA/fr-CA | Easy win |
-| Australia | English | en-AU | Easy win |
+| Market | Primary Locale | English Secondary | Notes |
+|---|---|---|---|
+| United States | en-US | — | US indexes 10 locales = 1,000 KW chars + 600 title/subtitle chars |
+| United Kingdom | en-GB | — | en-GB mirrors en-US exactly. Serves 130+ countries as cascade. |
+| Germany | de-DE | en-GB | Largest EU market. en-GB cascades for English compounds. |
+| **Japan** | ja | **en-US (exception!)** | The only non-US market using en-US as secondary. Plan `ja` + `en-US` as a unit. |
+| France | fr-FR | en-GB | fr-FR ALSO participates in US 10-locale cross-indexing |
+| South Korea | ko | en-GB | ko ALSO participates in US 10-locale cross-indexing |
+| China | zh-Hans | en-GB | zh-Hans ALSO participates in US 10-locale cross-indexing. Needs ICP for app itself. |
+| Taiwan/HK | zh-Hant | en-GB | zh-Hant ALSO participates in US 10-locale cross-indexing |
+| Brazil | pt-BR | en-GB | pt-BR ALSO participates in US 10-locale cross-indexing |
+| Canada | en-CA, fr-CA | — | Own storefront with dual English+French |
+| Australia | en-AU | en-GB | Own storefront; en-GB as secondary |
 
-### Tier 2 Markets (good potential)
+### Tier 2 Markets
 
-Spain (es-ES), Italy (it), Netherlands (nl), Sweden (sv), Russia (ru), Mexico (es-MX), India (en-IN/hi), Indonesia (id), Turkey (tr), Saudi Arabia (ar-SA)
+Spain (es-ES + ca + en-GB), Italy (it + en-GB), Netherlands (nl-NL + en-GB), Sweden (sv + en-GB), Russia (ru + en-GB), Mexico (es-MX + en-GB — but es-MX is US-indexed!), India (en-GB + hi + 9 regional = 1,200 KW chars), Indonesia (id + en-GB), Turkey (tr + en-GB), Saudi Arabia (ar-SA + en-GB — but ar-SA is US-indexed!)
 
 ### How to Choose
 
@@ -126,6 +163,64 @@ Instead:
 3. Track conversion rate by country
 4. Iterate based on performance data
 
+Full monitoring ladder (Day 1/3/7/14/30) + hard/soft rollback triggers in [`../aso-audit/references/1998-cam-lessons.md#lesson-5`](../aso-audit/references/1998-cam-lessons.md).
+
+## ⚠️ en-GB Global Cascade Check (MANDATORY before any en-US/en-GB change)
+
+Any word removed from en-US or en-GB subtitle or keywords must pass the **6-market cascade check**. en-GB mirrors en-US and serves 130+ countries. Removing a word silently breaks compounds everywhere.
+
+### Procedure
+
+1. **Pull international rankings:** `at_ranked_keywords` for **GB, DE, JP, FR, IT, BR** (the top 6 en-GB markets)
+2. **Compound search:** In each market's top 500, search for compounds containing the word
+3. **Volume check:** `at_keyword_stats` with `country=gb` for the word + its compounds
+4. **Decision:** If ANY compound in ANY market ranks top 20 → **LOCKED** → do not remove
+
+### Classification
+
+| International Rank | Classification | Action |
+|---|---|---|
+| Top 10 in ANY market | GLOBALLY LOCKED | Cannot remove |
+| Top 20 in 3+ markets | GLOBALLY PROTECTED | Requires documented override |
+| Top 50 in 1-2 markets | EVALUATE | Acceptable if no top-20 compound value |
+| #51+ in all 6 markets | SAFE | Can drop (still run standard US check) |
+
+Full procedure + incident drill in [`../aso-audit/references/1998-cam-lessons.md#lesson-1-en-gb-global-cascade-check`](../aso-audit/references/1998-cam-lessons.md).
+
+## Staged Deployment Patterns (proven on 1998 Cam, April 2026)
+
+Never deploy all locales at once — mass re-indexing causes 2-4 weeks of rank turbulence. Stage the deploy in 5 steps:
+
+### Stage 1: Emergency English (no build required)
+
+Deploy `en-US`, `en-GB`, `en-CA`, `en-AU` keyword fields first. These can be updated via the ASC API on a pending version without uploading a new build — ideal for emergency recovery from an en-GB cascade loss.
+
+### Stage 2: Build Upload
+
+Archive and upload a new build via Xcode. Required before subtitle changes (app-info localizations) can be deployed.
+
+### Stage 3: Subtitle + Title Updates
+
+Subtitles and titles live in `appInfoLocalizations`, not `appStoreVersionLocalizations`. They are editable ONLY on the `appInfo` with `appStoreState=PREPARE_FOR_SUBMISSION`.
+
+**Silent failure gotcha:** The API will accept a subtitle update on the `READY_FOR_SALE` app-info but won't actually change anything. Always find the editable one:
+
+```bash
+asc app-infos list --app {APP_ID}
+# → one is READY_FOR_SALE (locked, silent-fail target)
+# → one is PREPARE_FOR_SUBMISSION (editable) — use this
+```
+
+### Stage 4: Home Market Keyword Fields
+
+Deploy remaining 15+ home market keyword fields (de-DE, ja, it, es-ES, etc.).
+
+### Stage 5: Submit for Review
+
+**Rule:** English locales first, home markets second. Limits blast radius and lets you validate the en-GB cascade before touching native markets.
+
+Full deployment patterns + validation rules + 409 bug handling in [`../aso-audit/references/1998-cam-lessons.md#lesson-7`](../aso-audit/references/1998-cam-lessons.md).
+
 ## Output Format
 
 ### Localization Plan
@@ -163,3 +258,9 @@ Cultural notes:
 - `metadata-optimization` — Write localized metadata
 - `screenshot-optimization` — Localize screenshot designs
 - `competitor-analysis` — Analyze local competitors
+
+## References
+
+- [`references/cross-locale-map.md`](references/cross-locale-map.md) — Corrected Apple cross-locale indexing map (en-GB universal secondary, Japan exception, 28 storefronts)
+- [`../aso-audit/references/1998-cam-lessons.md`](../aso-audit/references/1998-cam-lessons.md) — en-GB Cascade Check, Protected Token Set, Monitoring Ladder, Rollback Triggers, Staged Deployment Patterns, Incident Drill
+- [`../../tools/integrations/apptweak.md`](../../tools/integrations/apptweak.md) — AppTweak MCP tool reference

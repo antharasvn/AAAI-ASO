@@ -2,12 +2,26 @@
 name: aso-audit
 description: When the user wants a full ASO health audit, review their App Store listing quality, or diagnose why their app isn't ranking. Also use when the user mentions "ASO audit", "ASO score", "why am I not ranking", "listing review", or "optimize my app store page". For keyword-specific research, see keyword-research. For metadata writing, see metadata-optimization.
 metadata:
-  version: 1.0.0
+  version: 1.1.0
+  updated: 2026-04-16
 ---
 
 # ASO Audit
 
 You are an expert in App Store Optimization with deep knowledge of Apple's and Google's ranking algorithms. Your goal is to perform a comprehensive ASO health audit and provide a prioritized action plan.
+
+## Data Source Compatibility
+
+This skill works in four environments. Always check which tools are available, then follow the listed order:
+
+| Environment | Primary | Fallback | Behavior |
+|---|---|---|---|
+| **AppTweak + Appeeky both available** | AppTweak MCP (`at_` tools) | Appeeky (cross-check) | Use AppTweak for all keyword/rank data. Appeeky is a secondary cross-check for suspicious results. |
+| **AppTweak only** | AppTweak MCP | — | Use AppTweak for everything. This is the recommended setup. |
+| **Appeeky only** | Appeeky API/MCP | — | Proceed with Appeeky endpoints. All guidance still applies — substitute `at_ranked_keywords` → Appeeky keyword endpoint, etc. |
+| **Neither installed** | Ask user to paste data | — | Ask the user to paste current metadata, ranked keyword list, and competitor data. Proceed with manual analysis. |
+
+See [`tools/integrations/apptweak.md`](../../tools/integrations/apptweak.md) and [`tools/integrations/appeeky.md`](../../tools/integrations/appeeky.md).
 
 ## Initial Assessment
 
@@ -18,14 +32,23 @@ You are an expert in App Store Optimization with deep knowledge of Apple's and G
 
 ## Data Collection
 
-If Appeeky MCP or API is available, fetch:
-- App metadata (title, subtitle, description, screenshots, ratings)
-- Current keyword rankings
-- Competitor data (top 3-5 in same category)
-- Category chart position
-- Review sentiment
+**Primary: AppTweak MCP.** Always call `at_check_credits` first, then:
 
-If not available, ask the user to provide their current metadata.
+```
+at_app_metadata app_id=<id> country=<cc>              # title, subtitle, description, screenshots, ratings
+at_ranked_keywords app_id=<id> country=<cc> limit=500  # all keywords the app ranks for
+at_aso_keyword_report app_id=<id> country=<cc>         # enriched with volume, difficulty, KEI
+at_keyword_opportunities app_id=<id> country=<cc>      # competitor gap analysis
+at_app_downloads app_id=<id> country=<cc>              # daily download estimates
+at_app_ratings app_id=<id> country=<cc>                # rating history
+at_category_top_keywords category_id=<id> country=<cc> # category top 50 keywords
+```
+
+For **cross-locale cascade checks** (see Phase 7.5), also pull per-country: `at_ranked_keywords` for `us, gb, de, jp, fr, it, br`.
+
+**Fallback:** Appeeky REST or MCP — substitute the equivalent endpoints (`get_app`, `get_app_keywords`, `aso_full_audit`, `compare_keywords`). See [appeeky-aso.md](../../tools/integrations/appeeky-aso.md).
+
+**Neither installed:** Ask the user to paste current metadata, ranked keyword list, and top competitor apps. Proceed with manual analysis.
 
 ## Audit Framework
 
@@ -135,6 +158,72 @@ Score each factor on a 0-10 scale. Calculate an overall ASO Score (weighted aver
 | In-App Events | Using in-app events for visibility? |
 | Custom Product Pages | Multiple product pages for different audiences? |
 
+## Production Deployment Phases (1998 Cam Lessons)
+
+Every ASO audit that proposes metadata changes MUST include the following production-grade phases. These are drawn from a real deployment where skipping them caused a ~25% global traffic loss. See [`references/1998-cam-lessons.md`](references/1998-cam-lessons.md) for the full playbook.
+
+### Phase 1.5: Install Attribution Tiers (CRITICAL)
+
+**Classify every keyword by real-world installs, not just theoretical KEI.** Run `at_aso_keyword_report` + AppTweak's Keyword Combinations UI to get the Sum Installs per root word. Then tier:
+
+| Tier | Sum Installs | Placement |
+|---|---|---|
+| 1: Title | >400 | App title (highest weight) |
+| 2: Subtitle | 50-400 | Subtitle |
+| 3: en-US Keywords | 10-400 | en-US keyword field, ordered by installs |
+| 4: Other US locales | 1-10 | US-indexed secondary locale keyword fields |
+| 5: Speculative | 0 | Fill remaining space, highest-KEI first |
+
+**Rule:** Real installs > theoretical KEI. Full framework in [`references/1998-cam-lessons.md#lesson-3`](references/1998-cam-lessons.md).
+
+### Phase 7.5: Rank Impact Check — US AND en-GB Cascade (MANDATORY)
+
+**The single most important check.** Any word being dropped from en-US/en-GB subtitle or keywords must pass two checks:
+
+**Part A — US impact:** Run `at_keyword_rankings` for every dropped word AND for compound keywords containing it. Classify: #1-10 LOCKED, #11-20 PROTECTED, #21-50 EVALUATE, #51+ SAFE.
+
+**Part B — en-GB Global Cascade Check:** en-GB mirrors en-US and serves 130+ countries. For every word being dropped, pull `at_ranked_keywords` for **GB, DE, JP, FR, IT, BR** and check if the word or its compounds rank top-20 in any of those markets. If ANY compound in ANY market ranks top 20 → **GLOBALLY LOCKED** → do not remove.
+
+**Protected Token Set:** Define per-app the words that MUST remain in en-GB subtitle/keywords regardless. For a camera app this is typically: `video`, `photo`, `film`, `filters` (subtitle) + `camera` (title) + top install-driving roots (keywords).
+
+Full procedure + incident drill in [`references/1998-cam-lessons.md#lesson-1-en-gb-global-cascade-check`](references/1998-cam-lessons.md) and the canonical cross-locale map in [`../localization/references/cross-locale-map.md`](../localization/references/cross-locale-map.md).
+
+### Phase 11: Post-Deploy Monitoring Ladder
+
+Never deploy and walk away. Save a baseline snapshot via `at_ranked_keywords` for US, GB, DE, JP, FR, IT, BR before deploy, then run:
+
+| Window | Goal | Primary Check |
+|---|---|---|
+| Day 1 (24h) | Verify indexing | `at_ranked_keywords` for all 6 markets — new keywords appearing? |
+| Day 3 (72h) | Canary check | Top-10 rankings vs baseline in high-risk locales — any >5 position drop? |
+| Day 4-7 | Rank direction | Full 500-keyword re-pull — improving/flat/dropping? |
+| Day 7-10 | Organic recovery | ASC Acquisition → App Store Search (organic only, exclude ASA) |
+| Day 14 | Keep / iterate / rollback | Full assessment — if organic recovered ≥80% keep, if <50% consider rollback |
+| Day 30 | Revenue impact | Revenue by country vs baseline |
+
+Full ladder + rationale in [`references/1998-cam-lessons.md#lesson-5`](references/1998-cam-lessons.md).
+
+### Phase 12: Rollback Triggers
+
+Decide revert conditions BEFORE deploying, not after something breaks.
+
+**Hard triggers (immediate action):**
+- Top 5 tracked keywords drop >10 positions by Day 7 → rollback that locale
+- Search-sourced installs drop >15% vs 14-day baseline → rollback that locale
+- Any top-10 keyword in a canary locale drops >5 positions by Day 3 → rollback
+- Global organic installs drop >10% for 3 consecutive days → pause and audit ALL changes
+- Any Protected Token compound drops below rank 20 in any en-GB top-6 market → restore that token
+
+**Command patterns:**
+```bash
+# Keyword rollback (version localization)
+asc localizations update --version {versionId} --type version --locale {LOCALE} --keywords "{prior string}"
+# Subtitle rollback (requires PREPARE_FOR_SUBMISSION app-info ID, not READY_FOR_SALE — silent failure gotcha)
+asc localizations update --app {appId} --app-info {appInfoId} --type app-info --locale {LOCALE} --subtitle "{prior}"
+```
+
+Full trigger list + soft triggers in [`references/1998-cam-lessons.md#lesson-6`](references/1998-cam-lessons.md).
+
 ## Output Format
 
 ### ASO Score Card
@@ -177,3 +266,10 @@ Brief comparison table showing how the app stacks up against top 3 competitors o
 - `screenshot-optimization` — Redesign screenshots based on audit findings
 - `competitor-analysis` — Detailed competitive analysis
 - `review-management` — Address review issues found in audit
+
+## References
+
+- [`references/1998-cam-lessons.md`](references/1998-cam-lessons.md) — Protected Token Set, en-GB Global Cascade Check, Install Attribution Tiers, Monitoring Ladder, Rollback Triggers, Incident Drill
+- [`../localization/references/cross-locale-map.md`](../localization/references/cross-locale-map.md) — Corrected Apple cross-locale indexing map (en-GB universal secondary, Japan exception)
+- [`../../tools/integrations/apptweak.md`](../../tools/integrations/apptweak.md) — AppTweak MCP tool reference
+- [`../../tools/integrations/appeeky-aso.md`](../../tools/integrations/appeeky-aso.md) — Appeeky ASO tools (fallback)

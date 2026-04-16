@@ -2,7 +2,8 @@
 name: competitor-tracking
 description: When the user wants to monitor competitor apps on an ongoing basis — tracking metadata changes, keyword shifts, screenshot updates, rating trends, or new features. Use when the user mentions "competitor monitoring", "track competitors", "competitor alert", "competitor changed their title", "watch a competitor app", "competitor weekly report", "competitive intelligence", or "what changed in competitor's listing". For a one-time deep competitive analysis, see competitor-analysis. For market-wide chart movements, see market-movers.
 metadata:
-  version: 1.0.0
+  version: 1.1.0
+  updated: 2026-04-16
 ---
 
 # Competitor Tracking
@@ -25,8 +26,42 @@ You set up and run ongoing competitor surveillance — catching metadata changes
 3. Ask: **How often do you want to review?** (weekly recommended)
 4. Ask: **What are you most concerned about?** (keywords, ratings, creative, pricing)
 
-Use Appeeky to identify competitors if unknown:
+## Data Source Compatibility
+
+| Environment | Primary | Fallback |
+|---|---|---|
+| **AppTweak + Appeeky both available** | AppTweak MCP (`at_app_metadata`, `at_ranked_keywords`, `at_metadata_changes`, `at_asa_bid_history`) | Appeeky |
+| **AppTweak only** | AppTweak MCP | — |
+| **Appeeky only** | Appeeky API/MCP | — |
+| **Neither installed** | Manual checks via App Store screenshots + user input | — |
+
+### en-GB Cascade Awareness (CRITICAL for multi-market tracking)
+
+When tracking competitors, **always pull their en-GB metadata specifically**, not just en-US. en-GB is the universal secondary locale for 130+ countries; what a competitor keeps in en-GB reveals their global compound strategy.
+
+**Tracking checklist per competitor (weekly):**
+
+1. `at_app_metadata country=us` — primary market
+2. `at_app_metadata country=gb` — **the global compound foundation** (watch for changes here especially)
+3. `at_metadata_changes country=us` — automated change detection
+4. `at_ranked_keywords country=gb` — are they gaining/losing compounds in en-GB cascade markets?
+5. For top 3 competitors, also: `at_ranked_keywords country=de` + `country=jp` + `country=fr` — where their en-GB cascade is landing
+
+**What to watch for:**
+- Competitor adds a permanent category root word (e.g., "video") to their en-GB subtitle → they just gained compound traffic in 130+ markets
+- Competitor removes a Protected Token from en-GB → they're about to lose 10-25% of global organic traffic (the 1998 Cam mistake — see [`../aso-audit/references/1998-cam-lessons.md`](../aso-audit/references/1998-cam-lessons.md))
+
+### Identify Competitors
+
+Use AppTweak MCP (primary) to identify competitors if unknown:
+
 ```bash
+# AppTweak (primary)
+at_app_metadata app_id=<your_id> country=us  # check customers_also_bought
+at_live_search term="meditation" country=us  # top apps for the term
+at_keyword_opportunities app_id=<your_id> country=us  # auto-finds competitors + gap analysis
+
+# Appeeky (fallback)
 GET /v1/keywords/ranks?keyword=meditation&country=us&limit=10
 GET /v1/apps/:id/intelligence  # check competitors array
 ```
@@ -35,8 +70,15 @@ GET /v1/apps/:id/intelligence  # check competitors array
 
 ### Metadata Changes
 
-Check weekly using Appeeky:
+Check weekly using AppTweak (primary) or Appeeky (fallback):
+
 ```bash
+# AppTweak (primary) — per country, essential for en-GB cascade tracking
+at_app_metadata app_id=<competitor_id> country=us
+at_app_metadata app_id=<competitor_id> country=gb
+at_metadata_changes app_id=<competitor_id> country=us  # automated change log
+
+# Appeeky (fallback)
 GET /v1/apps/:id  # title, subtitle, description
 ```
 
@@ -49,6 +91,12 @@ Watch for:
 ### Keyword Ranking Changes
 
 ```bash
+# AppTweak (primary)
+at_ranked_keywords app_id=<competitor_id> country=us limit=500
+at_ranked_keywords app_id=<competitor_id> country=gb limit=500  # en-GB cascade view
+at_keyword_rankings app_ids=<competitor_id> keywords="<shared keyword>" country=us
+
+# Appeeky (fallback)
 GET /v1/apps/:id/keywords  # their ranking keywords
 GET /v1/keywords/ranks?keyword=[shared keyword]  # who's ranking where
 ```
@@ -135,35 +183,28 @@ Run a full `competitor-analysis` when:
 
 ### Manual (recommended for small teams)
 
-Set a calendar reminder. Run the Appeeky API calls above. Fill the template.
+Set a calendar reminder. Run the AppTweak tool calls above. Fill the template.
 
 ### Semi-automated
 
-Build a script that calls Appeeky weekly and diffs results:
+Build a script that calls AppTweak (or Appeeky as fallback) weekly and diffs results. Store results weekly and diff with the previous week's output.
 
-```bash
-#!/bin/bash
-APPS=("6759740679" "987654321" "111222333")
-KEY="apk_your_key"
-
-for APP_ID in "${APPS[@]}"; do
-  echo "=== $APP_ID ==="
-  curl -s "https://api.appeeky.com/v1/apps/$APP_ID" \
-    -H "X-API-Key: $KEY" | jq '.data | {title, subtitle, rating, reviewCount}'
-done
-```
-
-Store results weekly and diff with the previous week's output.
-
-### Appeeky MCP (in Claude/Cursor)
+### AppTweak MCP (in Claude/Cursor) — primary
 
 Ask your agent each Monday:
+
 ```
-"Run a competitor check on apps [ID1], [ID2], [ID3] and 
-compare their metadata and top keywords to last week."
+"Run a competitor check on apps [ID1], [ID2], [ID3]. For each, pull 
+at_app_metadata for country=us AND country=gb, at_metadata_changes 
+for the last week, and at_ranked_keywords country=us (limit=500). 
+Compare to last week's snapshot and flag any changes."
 ```
 
-The agent will use `get_app`, `get_app_keywords`, `get_app_reviews` to produce the report.
+The agent will use `at_app_metadata`, `at_ranked_keywords`, `at_metadata_changes`, `at_app_reviews`, and `at_asa_bid_history` to produce the report.
+
+### Appeeky MCP (fallback)
+
+Equivalent Appeeky MCP tools: `get_app`, `get_app_keywords`, `get_app_reviews`. See [`../../tools/integrations/appeeky-aso.md`](../../tools/integrations/appeeky-aso.md).
 
 ## Competitive Response Playbook
 
@@ -182,4 +223,10 @@ The agent will use `get_app`, `get_app_keywords`, `get_app_reviews` to produce t
 - `keyword-research` — Act on the keyword gaps you find
 - `market-movers` — Catch chart-level competitor movements automatically
 - `apple-search-ads` — Respond to competitor keyword moves with ASA bids
+
+## References
+
+- [`../aso-audit/references/1998-cam-lessons.md`](../aso-audit/references/1998-cam-lessons.md) — Protected Token Set, en-GB Cascade Check (know what a competitor removing from en-GB means)
+- [`../localization/references/cross-locale-map.md`](../localization/references/cross-locale-map.md) — Cross-locale indexing map
+- [`../../tools/integrations/apptweak.md`](../../tools/integrations/apptweak.md) — AppTweak MCP tool reference
 - `aso-audit` — Run on yourself after finding competitive gaps
