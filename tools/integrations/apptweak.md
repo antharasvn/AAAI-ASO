@@ -17,6 +17,19 @@ AppTweak is the recommended provider for keyword research, rank tracking, compet
 | Install attribution tiers (via Keyword Combinations UI) | AppTweak |
 | First-party App Store Connect data (downloads, revenue, subscriptions) | Appeeky Connect (separate product, see `appeeky-connect.md`) |
 
+## Store Support
+
+All tools support **both iOS (App Store) and Android (Google Play)**:
+
+| Store | `device` param | `app_id` format | Example |
+|---|---|---|---|
+| **iOS** (default) | `"iphone"` or `"ipad"` | Numeric Apple ID | `"544007664"` |
+| **Android** | `"android_phone"` or `"android_tablet"` | Package name | `"com.spotify.music"` |
+
+**iOS-only tools:** `at_asa_bidding_apps` and `at_asa_bid_history` (Apple Search Ads has no Android equivalent).
+
+All other tools work for both stores — just pass the appropriate `device` and `app_id` format.
+
 ## Setup
 
 1. Sign up at [apptweak.com](https://www.apptweak.com) and obtain an API key

@@ -12,12 +12,14 @@ You are a Google Play ASO expert. Google Play's algorithm differs fundamentally 
 
 ## Data Source Compatibility
 
-This skill works in four environments. **Note:** Google Play does not have Apple's en-GB cascade issue; locales on Play are fully independent. AppTweak is used here primarily for iOS benchmarks and for apps that ship on both platforms.
+This skill works in four environments. **Note:** Google Play does not have Apple's en-GB cascade issue; locales on Play are fully independent.
+
+**AppTweak MCP now natively supports Google Play.** Pass `device="android_phone"` and the Play Store package name as `app_id` (e.g., `"com.spotify.music"`). All keyword, rank, and download tools work for Android.
 
 | Environment | Primary | Fallback |
 |---|---|---|
-| **AppTweak + Appeeky both available** | AppTweak MCP (for iOS benchmarks and cross-platform comparison) + Play Console | Appeeky |
-| **AppTweak only** | AppTweak MCP + Play Console | — |
+| **AppTweak + Appeeky both available** | AppTweak MCP (`device="android_phone"`) + Play Console | Appeeky |
+| **AppTweak only** | AppTweak MCP (`device="android_phone"`) + Play Console | — |
 | **Appeeky only** | Appeeky API/MCP + Play Console | — |
 | **Neither installed** | Ask user to paste current metadata + Play Console stats | — |
 
@@ -100,12 +102,18 @@ Google Play indexes descriptions per language. Each locale is a fresh keyword op
 
 ## Keyword Research for Play Store
 
-Use AppTweak MCP (`at_ranked_keywords`, `at_keyword_stats`) for iOS keyword volume/difficulty benchmarks, then adapt for Play. Appeeky keyword endpoints are a supported fallback.
+Use AppTweak MCP **directly for Google Play** — pass `device="android_phone"` and the Play Store package name as `app_id`. All keyword tools return Play Store-specific data (volume, difficulty, rankings). No need to benchmark from iOS.
 
 ```bash
-# AppTweak (primary)
-at_ranked_keywords app_id=<ios_id> country=us limit=500
-at_keyword_stats keywords="meditation,mindfulness,sleep sounds" country=us
+# AppTweak — Google Play directly (primary)
+at_ranked_keywords app_id="com.example.myapp" country=us device=android_phone limit=500
+at_keyword_stats keywords="meditation,mindfulness,sleep sounds" country=us device=android_phone
+at_aso_keyword_report app_id="com.example.myapp" country=us device=android_phone
+at_keyword_opportunities app_id="com.example.myapp" country=us device=android_phone
+
+# Cross-platform comparison (if app is on both stores)
+at_ranked_keywords app_id=<ios_id> country=us device=iphone limit=500        # iOS rankings
+at_ranked_keywords app_id="com.example.myapp" country=us device=android_phone limit=500  # Android rankings
 
 # Appeeky (fallback)
 GET /v1/keywords/metrics?keywords=meditation,mindfulness,sleep sounds&country=us
